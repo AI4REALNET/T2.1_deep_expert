@@ -18,7 +18,7 @@ from alphaDeesp.core.alphadeesp import AlphaDeesp
 
 from helper_functions import EncodedTopologyAction, action_symmetry, save_actions
 
-logging.basicConfig(level=logging.INFO, filename="attacking_expert.log", filemode="w")
+logging.basicConfig(level=logging.INFO, filename="expert.log", filemode="w")
 logger = logging.getLogger(__name__)
 
 def get_expert_actions(config: ConfigParser, 
