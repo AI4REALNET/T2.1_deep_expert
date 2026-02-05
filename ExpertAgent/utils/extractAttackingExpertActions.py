@@ -51,7 +51,7 @@ def get_attacking_expert_actions(config: ConfigParser,
     action_list = []
     action_space_size = 0
 
-    for line_to_disconnect in tqdm(lines_to_disconnect[:1]):
+    for line_to_disconnect in tqdm(lines_to_disconnect):
         for chronic in chronic_indices:
             for timestep in range(env.max_episode_duration()):
                 # print(f"Chronic: {chronic:3d}, timestep: {timestep}, disconnected_line: {line_to_disconnect}")
