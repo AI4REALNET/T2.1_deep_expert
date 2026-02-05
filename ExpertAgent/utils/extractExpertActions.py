@@ -88,8 +88,11 @@ def get_expert_actions(config: ConfigParser,
             # if len(action_list) > 20:
             #     save_actions(action_list, original_action_indices)
             #     break
-            action_list_encoded = [EncodedTopologyAction.encode_action(act) for act in action_list]
-            save_actions("", env, env_name, action_list_encoded, action_list, original_action_indices)
+            if action_list:
+                action_list_encoded = [EncodedTopologyAction.encode_action(act) for act in action_list]
+                save_actions("", env, env_name, action_list_encoded, action_list, original_action_indices)
+            else:
+                continue
         print("Action list length: ", len(action_list))
 
 if __name__ == "__main__":
