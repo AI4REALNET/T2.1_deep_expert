@@ -41,7 +41,7 @@ AI4REALNET_SMALL_DEFAULT_OPTIM_CONFIG = {
     "sim_range_time_step": 1,
 }
 
-class ExpertAgent(BaseAgent):
+class ExpertAgentHeuristic(BaseAgent):
     def __init__(
         self,
         action_space: ActionSpace,
@@ -49,7 +49,8 @@ class ExpertAgent(BaseAgent):
         rho_danger: float = 0.99,
         rho_safe: float = 0.9,
         action_space_expert: str = os.path.join(ASSETS, "ai4realnet_small_expert_actions_vector.npz"),
-        action_space_unsafe: str = os.path.join(ASSETS, "attacking_teacher_actionspace.npz"),
+        action_space_unsafe: str = os.path.join(ASSETS, "attacking_teacher_actionspace.npz")
+        # action_space_unsafe: str = os.path.join(ASSETS, "attacking_teacher_actionspace.npz"),
     ):
         BaseAgent.__init__(self, action_space=action_space)
         # Environment
@@ -155,8 +156,8 @@ if __name__ == "__main__":
     env.seed(seed)
     obs = env.reset()
     
-    agent = ExpertAgent(action_space=env.action_space,
-                    env=env)
+    agent = ExpertAgentHeuristic(action_space=env.action_space,
+                                 env=env)
     
     verbose = True
     runner_params = env.get_params_for_runner()
