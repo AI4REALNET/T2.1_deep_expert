@@ -130,7 +130,7 @@ if __name__ == "__main__":
     
     tasks = []
     for line_to_disconnect in lines_to_disconnect:
-        tasks.append((config, env_path, env_name, list(line_to_disconnect)))
+        tasks.append((config, env_path, env_name, [line_to_disconnect]))
     
     with Pool(int(args.jobs)) as p:
         p.starmap(get_attacking_expert_actions, tasks)
