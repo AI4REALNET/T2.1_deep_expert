@@ -88,14 +88,17 @@ def get_expert_actions(config: ConfigParser,
             # if len(action_list) > 20:
             #     save_actions(action_list, original_action_indices)
             #     break
-            action_list_encoded = [EncodedTopologyAction.encode_action(act) for act in action_list]
-            save_actions("", env, env_name, action_list_encoded, action_list, original_action_indices)
+            if action_list:
+                action_list_encoded = [EncodedTopologyAction.encode_action(act) for act in action_list]
+                save_actions("", env, env_name, action_list_encoded, action_list, original_action_indices)
+            else:
+                continue
         print("Action list length: ", len(action_list))
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog="ExpertActions")
     parser.add_argument('--environment', help="the environment name", default="ai4realnet_small", type=str, required=True)
-    parser.add_argument('--seed', help="Seed used for environment and numpy random", default=1, type=int, required=True)
+    # parser.add_argument('--seed', help="Seed used for environment and numpy random", default=1, type=int, required=True)
     args = parser.parse_args()
     
     current_file_dir = os.path.dirname(os.path.abspath(__file__))

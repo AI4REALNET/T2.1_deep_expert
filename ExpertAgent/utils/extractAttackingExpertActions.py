@@ -1,11 +1,12 @@
 # python --environment=ai4realnet_small --seed=42
 import os
+import json
 import argparse
 import logging
 import warnings
 warnings.filterwarnings('ignore')  # Suppress all warnings
 from configparser import ConfigParser
-import numpy as np
+from multiprocessing import Pool
 from tqdm import tqdm
 
 import numpy as np
@@ -39,7 +40,6 @@ def get_attacking_expert_actions(config: ConfigParser,
     loader = Grid2opObservationLoader(env_folder)
     env, obs, action_space = loader.get_observation(chronic_scenario= 0, timestep=0)
 
-    # TODO: find out why converter does not identify some actions proposed by the expert agent
     converter = IdToAct(env.action_space)
     converter.init_converter()
 
@@ -51,7 +51,7 @@ def get_attacking_expert_actions(config: ConfigParser,
     action_list = []
     action_space_size = 0
 
-    for line_to_disconnect in tqdm(lines_to_disconnect[:1]):
+    for line_to_disconnect in tqdm(lines_to_disconnect):
         for chronic in chronic_indices:
             for timestep in range(env.max_episode_duration()):
                 # print(f"Chronic: {chronic:3d}, timestep: {timestep}, disconnected_line: {line_to_disconnect}")
@@ -98,14 +98,19 @@ def get_attacking_expert_actions(config: ConfigParser,
                 # if len(action_list) > 20:
                 #     save_actions(action_list, original_action_indices)
                 #     break
-                action_list_encoded = [EncodedTopologyAction.encode_action(act) for act in action_list]
-                save_actions("attacking", env, env_name, action_list_encoded, action_list, original_action_indices)
+                if action_list:
+                    action_list_encoded = [EncodedTopologyAction.encode_action(act) for act in action_list]
+                    save_actions("attacking", env, env_name, action_list_encoded, action_list, original_action_indices)
+                else:
+                    continue
         print("Action list length: ", len(action_list))
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog="ExpertActions")
     parser.add_argument('--environment', help="the environment name", default="ai4realnet_small", type=str, required=True)
-    parser.add_argument('--seed', help="Seed used for environment and numpy random", default=1, type=int, required=True)
+    # parser.add_argument('--seed', help="Seed used for environment and numpy random", default=1, type=int, required=True)
+    parser.add_argument('--disc_list', help="The list of lines to attack", default="[45, 56, 0, 9, 13, 14, 18, 23, 27, 39]", type=json.loads, required=True)
+    parser.add_argument('--jobs', help="Number of jobs to use for parallel computing", default=10, type=int, required=False)
     args = parser.parse_args()
     
     current_file_dir = os.path.dirname(os.path.abspath(__file__))
@@ -121,7 +126,14 @@ if __name__ == "__main__":
     
     config.set("DEFAULT", option="gridPath", value=env_path)
     
-    lines_to_disconnect = [45, 56, 0, 9, 13, 14, 18, 23, 27, 39]
-
-    get_attacking_expert_actions(config, env_path, env_name, lines_to_disconnect)
+    lines_to_disconnect = list(args.disc_list)
+    
+    tasks = []
+    for line_to_disconnect in lines_to_disconnect:
+        tasks.append((config, env_path, env_name, [line_to_disconnect]))
+    
+    with Pool(int(args.jobs)) as p:
+        p.starmap(get_attacking_expert_actions, tasks)
+        
+    # get_attacking_expert_actions(config, env_path, env_name, lines_to_disconnect)
     
