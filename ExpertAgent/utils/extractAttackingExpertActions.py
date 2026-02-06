@@ -1,5 +1,6 @@
 # python --environment=ai4realnet_small --seed=42
 import os
+import json
 import argparse
 import logging
 import warnings
@@ -108,7 +109,8 @@ def get_attacking_expert_actions(config: ConfigParser,
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog="ExpertActions")
     parser.add_argument('--environment', help="the environment name", default="ai4realnet_small", type=str, required=True)
-    parser.add_argument('--seed', help="Seed used for environment and numpy random", default=1, type=int, required=True)
+    # parser.add_argument('--seed', help="Seed used for environment and numpy random", default=1, type=int, required=True)
+    parser.add_argument('--disc_list', help="The list of lines to attack", default="[45, 56, 0, 9, 13, 14, 18, 23, 27, 39]", type=json.loads, required=True)
     args = parser.parse_args()
     
     current_file_dir = os.path.dirname(os.path.abspath(__file__))
@@ -124,7 +126,7 @@ if __name__ == "__main__":
     
     config.set("DEFAULT", option="gridPath", value=env_path)
     
-    lines_to_disconnect = [45, 56, 0, 9, 13, 14, 18, 23, 27, 39]
+    lines_to_disconnect = list(args.disc_list)
 
     get_attacking_expert_actions(config, env_path, env_name, lines_to_disconnect)
     
