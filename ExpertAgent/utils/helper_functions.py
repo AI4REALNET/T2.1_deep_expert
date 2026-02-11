@@ -7,12 +7,19 @@ from copy import deepcopy
 
 import numpy as np
 import pandas as pd
+from matplotlib import pyplot as plt
 
 import grid2op
 from grid2op.Action import BaseAction
 from grid2op.Environment import BaseEnv
 from grid2op.Environment import Environment
 
+def get_package_root():
+    """
+    Returns the absolute path to the root of the package.
+    """
+    return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    
 
 def save_actions(name:str,
                  env: Environment, 
@@ -196,3 +203,31 @@ def action_symmetry(action: BaseAction) -> BaseAction:
         action_sym.set_bus = np.array(tmp, dtype=np.int32)
 
         return action_sym
+    
+def plot_runner_results(results, episode_max_length):
+    chronics = [results[i][1] for i in range(len(results))]
+    rewards = [results[i][2] for i in range(len(results))]
+    alive = [results[i][3] for i in range(len(results))]
+    
+    fig, ax1 = plt.subplots()
+
+    # Left Y-axis
+    ax1.plot(range(len(results)), alive, 'r-o', label='Alive time')
+    ax1.set_xticks(range(len(results)))
+    ax1.set_xticklabels(chronics, ha="right")
+    ax1.set_yticks(range(0, episode_max_length, 500))
+    ax1.set_xlabel('Chronics')
+    ax1.set_ylabel('Alive time', color='r')
+    ax1.tick_params(axis='y', labelcolor='r')
+    ax1.tick_params(axis='x', labelrotation=45)
+
+    # Right Y-axis
+    ax2 = ax1.twinx()
+    ax2.plot(range(len(results)), rewards, 'b-s', label='Rewards')
+    ax2.set_ylabel('Rewards', color='b')
+    ax2.tick_params(axis='y', labelcolor='b')
+
+    plt.title('Agent performance over various Episodes')
+    fig.tight_layout()
+    plt.grid()
+    plt.show()

@@ -208,3 +208,8 @@ __marimo__/
 
 .vscode
 *.csv
+
+data_other
+logs
+logs_eval
+*.bkp

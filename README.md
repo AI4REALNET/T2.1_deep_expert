@@ -17,6 +17,8 @@ To be able to run the experiments in this repository, the following steps show h
 
 ### Requirements
 - Python >= 3.6
+- [ExpertOp4Grid package (customized)](https://github.com/Mleyliabadi/ExpertOp4Grid)
+- [LJN agent package (customized)](https://github.com/Mleyliabadi/l2rpn-2023-ljn-agent)
 
 ### Setup a Virtualenv (optional)
 #### Create a Conda env (recommended)
@@ -33,7 +35,23 @@ python3 -m virtualenv venv_expert_agent
 source venv_expert_agent/bin/activate
 ```
 
-### Install from source
+### Install the prerequisites
+
+#### ExpertOp4Grid package
+```bash
+git clone git@github.com:Mleyliabadi/ExpertOp4Grid.git
+cd ExpertOp4Grid
+pip install -U .
+```
+
+#### LJN Agent package
+```
+git clone git@github.com:Mleyliabadi/l2rpn-2023-ljn-agent.git
+cd l2rpn-2023-ljn-agent
+pip install -U .
+```
+
+### Install the current package from source
 ```bash
 git clone git@github.com:AI4REALNET/T2.1_deep_expert.git
 cd T2.1_deep_expert
@@ -90,4 +108,44 @@ pip3 install -e .[recommended]
 ├── setup.py
 
 
+## Reproducibility
+### 1. DeepQExpert Agent
+----
+This agent applies an extended DeepQ algorithm for power grids and specifically works good with ``l2rpn_case14_sandbox`` environment.
 
+#### Train
+To train this agent, the following command could be executed from root and CLI:
+```bash
+python ExpertAgent/DeepQExpert/train.py \ 
+    --save_path="l2rpn_case14_sandbox" \
+    --num_train_steps=1000000 \
+    --name="DeepQExpert" \
+    --logs_dir="l2rpn_case14_sandbox/logs"
+```
+At the end of the training, the weights of the model and some information concerning the neural network architecture are saved and logged.
+
+#### Evaluate
+To evaluate an already trained version of it, the following command could be executed from root and using CLI:
+```bash
+python ExpertAgent/DeepQExpert/evaluate.py
+```
+
+At the end of the evaluation, a graphic representing the performance (reward/alive time) of the agent is visualized to the user.
+![image](docs/imgs/DeepQExpert_Evaluation.png)
+
+
+### 2. ExpertAgent Heuristics
+--------------------------
+The heuristic version of the `ExpertAgent` does not require any training and the evaluation could be run using a main function included in the root of the package. This agent is already provided to work for `ai4realnet_small` scenario of AI4REALNET project and power grid usecase (first).
+
+```bash
+python main_expert_heuristic.py --nb_episode=15 --nb_process=1 --max_step=2016 --verbose=True 
+```
+
+At the end of the evaluation a graphic representing the performance (reward/alive time) of the agent is visualized to the user.
+![image](docs/imgs/ExpertAgentHeuristic_Evaluation.png)
+
+
+
+### 3. ExpertAgent RL
+------------------
