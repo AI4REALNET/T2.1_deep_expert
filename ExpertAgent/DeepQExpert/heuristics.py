@@ -2,6 +2,8 @@ from abc import abstractmethod
 
 import numpy as np
 import tensorflow as tf
+import torch
+
 from grid2op.Action import ActionSpace
 from grid2op.Agent import BaseAgent, GreedyAgent
 from grid2op.dtypes import dt_float
@@ -171,5 +173,34 @@ class TopoNNTopKModule(GreedyModule):
         act_id_list = self.get_top_k(transformed_observation, top_k=self.top_k)
         return [self.agent.convert_act(act_id) for act_id in act_id_list]
         
-        
+
+class TopoNNTopKModulePPO(GreedyModule):
+    def __init__(
+        self,
+        action_space,
+        gym_env,
+        model,
+        top_k: int = 1,
+        device: str = "cpu",
+    ):
+        GreedyModule.__init__(self, action_space)
+        self.top_k = top_k
+        self.device = device
+        self.gym_env = gym_env
+        self.model = model
+        # self.load_policy(model_path)
+
+    def get_top_k(self, gym_obs, top_k: int):
+        input = torch.from_numpy(gym_obs).reshape((1, len(gym_obs))).to(self.device)
+        distribution = self.model.policy.get_distribution(input)
+        logits = distribution.distribution.logits
+        return torch.topk(logits, k=top_k)[1].cpu().numpy()[0]
+
+    # def load_policy(self, model_path: str):
+    #     self.model = PPO.load(model_path, device=self.device, custom_objects = {'observation_space' : self.gym_env.observation_space, 'action_space' : self.gym_env.action_space})
+
+    def _get_tested_action(self, observation):
+        gym_obs = self.gym_env.observation_space.to_gym(observation)
+        act_id_list = self.get_top_k(gym_obs, top_k=self.top_k)
+        return [self.gym_env.action_space.from_gym(i) for i in act_id_list]
         
