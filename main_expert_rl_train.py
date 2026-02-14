@@ -44,6 +44,7 @@ if __name__ == "__main__":
     agent = ExpertAgentRL(name="PPO_SB3",
                           env=env,
                           action_space=env.action_space,
+                          gymenv=env_gym,
                           gym_act_space=env_gym.action_space,
                           gym_obs_space=env_gym.observation_space,
                           nn_kwargs=nn_kwargs
