@@ -1,4 +1,5 @@
 import os
+import re
 import pickle
 import base64
 import zlib
@@ -13,6 +14,13 @@ import grid2op
 from grid2op.Action import BaseAction
 from grid2op.Environment import BaseEnv
 from grid2op.Environment import Environment
+from grid2op.gym_compat import GymEnv, BoxGymObsSpace, DiscreteActSpaceGymnasium
+from lightsim2grid.lightSimBackend import LightSimBackend
+
+from l2rpn_baselines.PPO_SB3.utils import remove_non_usable_attr
+
+from ExpertAgent import ASSETS
+
 
 def get_package_root():
     """
@@ -203,6 +211,73 @@ def action_symmetry(action: BaseAction) -> BaseAction:
         action_sym.set_bus = np.array(tmp, dtype=np.int32)
 
         return action_sym
+
+
+def combine_action_spaces(action_space_names: list):
+    whole_action_space = []
+    for name in action_space_names:
+        act_space_data = np.load(os.path.join(ASSETS, name), allow_pickle=True)["action_space"]
+        whole_action_space.append(act_space_data)
+    whole_action_space = np.vstack(whole_action_space)
+    np.savez_compressed(os.path.join(ASSETS, "whole_action_space"), 
+                    action_space=whole_action_space, 
+                    counts=np.arange(len(whole_action_space)))
+    
+def create_env(env_name: str,
+               reward_class = None,
+               obs_attr_to_keep=["rho"], 
+               action_space_path: Optional[str] = "read_from_file",
+               act_to_keep=("set_bus",),
+               chronics_filter: Optional[str]=None,
+               seed=1234
+               ):
+    env = grid2op.make(env_name, 
+                       backend=LightSimBackend(), 
+                       reward_class=reward_class)
+    env.seed(seed)
+    if chronics_filter is not None:
+        env.chronics_handler.real_data.set_filter(lambda x: re.match(chronics_filter, x) is not None)
+        env.chronics_handler.real_data.reset()
+    
+    env_gym = make_gymenv(env, obs_attr_to_keep, action_space_path, act_to_keep)
+    return env, env_gym
+
+def make_gymenv(env: Environment, 
+                obs_attr_to_keep: list=["rho"],
+                action_space_path: Optional[str]="read_from_file",
+                act_to_keep=("set_bus",)):
+    """Create a gymnasium environment from grid2op
+
+    Parameters
+    ----------
+    env : `Environment`
+        A grid2op.env
+    obs_attr_to_keep : list, optional
+        the list of attributes to keep for an observation, by default ["rho"]
+    act_to_keep : tuple, optional
+        the list of action types to include in the gym environment action space, by default ("set_bus",)
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
+    # act_attr_to_keep = remove_non_usable_attr(env, act_to_keep)
+    # print("****************", act_attr_to_keep)
+    env_gym = GymEnv(env)
+    env_gym.observation_space.close()
+    env_gym.observation_space = BoxGymObsSpace(env.observation_space,
+                                               attr_to_keep=obs_attr_to_keep)
+    env_gym.action_space.close()
+    if action_space_path=="from_list":
+        env_gym.action_space = DiscreteActSpaceGymnasium(env.action_space,
+                                                         attr_to_keep=act_to_keep)
+    else:
+        act_space_data = np.load(os.path.join(ASSETS, "whole_action_space.npz"), allow_pickle=True)["action_space"]
+        act_space = DiscreteActSpaceGymnasium(env.action_space, action_list=act_space_data)
+        env_gym.action_space = act_space
+        
+    return env_gym
     
 def plot_runner_results(results, episode_max_length):
     chronics = [results[i][1] for i in range(len(results))]
