@@ -1,3 +1,4 @@
-__all__ = ["ExpertAgentHeuristic"]
+__all__ = ["ExpertAgentHeuristic", "ExpertAgentRL"]
 
 from ExpertAgent.ExpertAgent.agentHeuristic import ExpertAgentHeuristic
+from ExpertAgent.ExpertAgent.agentRL import ExpertAgentRL
