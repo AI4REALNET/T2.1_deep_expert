@@ -4,6 +4,7 @@ import argparse
 import numpy as np
 
 from LJNAgent.modules.rewards import PPO_Reward
+from LJNAgent.modules.rewards import MaxRhoReward
 from stable_baselines3.ppo import MlpPolicy
 from grid2op.Runner import Runner
 
@@ -65,6 +66,7 @@ if __name__ == "__main__":
     
     env_name = "ai4realnet_small"
     reward_class = PPO_Reward # LinesCapacityReward
+    reward_class = MaxRhoReward
     seed = args.env_seed
     obs_attr_to_keep = ["rho"]
     act_attr_to_keep = ["set_bus"]
@@ -81,7 +83,7 @@ if __name__ == "__main__":
     
     # Agent parameters
     name = "PPO_SB3"
-    load_path = os.path.join(get_package_root(), "..", name, "model", "best_model")
+    load_path = os.path.join(get_package_root(), "..", name, "model", "PPO_SB3")
     logs_dir = None
 
     net_arch=[800, 1000, 1000, 800]

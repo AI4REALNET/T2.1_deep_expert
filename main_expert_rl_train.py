@@ -1,6 +1,6 @@
 
 import os
-from LJNAgent.modules.rewards import PPO_Reward
+from LJNAgent.modules.rewards import PPO_Reward, MaxRhoReward
 from stable_baselines3.ppo import MlpPolicy
 
 from ExpertAgent.ExpertAgent import ExpertAgentRL
@@ -10,6 +10,7 @@ from ExpertAgent.utils.helper_functions import create_env
 if __name__ == "__main__":
     env_name = "ai4realnet_small"
     reward_class = PPO_Reward # LinesCapacityReward
+    reward_class = MaxRhoReward
     seed = 1234
     obs_attr_to_keep = ["rho"]
     act_attr_to_keep = ["set_bus"]
@@ -35,7 +36,7 @@ if __name__ == "__main__":
             "policy": MlpPolicy,
             "env": env_gym,
             "verbose": True,
-            "learning_rate": 3e-4,
+            "learning_rate": 1e-3,
             "tensorboard_log": logs_dir,
             "policy_kwargs": policy_kwargs,
             "device": "auto"
@@ -53,5 +54,6 @@ if __name__ == "__main__":
     agent.train_model(env_gym=env_gym,
                       n_eval_episodes=1,
                       total_timesteps=int(1e5),
-                      save_path=save_path
+                      save_path=save_path,
+                      save_freq=int(1e4)
                       )
