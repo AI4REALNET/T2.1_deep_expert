@@ -36,7 +36,8 @@ source venv_expert_agent/bin/activate
 ```
 
 ### Install the prerequisites
-
+> [!IMPORTANT] 
+> These steps are mandatory to be able to use the package and its different functionalities
 #### ExpertOp4Grid package
 ```bash
 git clone git@github.com:Mleyliabadi/ExpertOp4Grid.git
@@ -51,12 +52,21 @@ cd l2rpn-2023-ljn-agent
 pip install -U .
 ```
 
+#### Prepare the environment 
+```bash
+git clone git@github.com:AI4REALNET/grid2op-scenario.git
+cd grid2op-scenario
+cp -r ai4realnet_small /home/<USERNAME>/data_grid2op/.
+```
+
 ### Install the current package from source
 ```bash
 git clone git@github.com:AI4REALNET/T2.1_deep_expert.git
 cd T2.1_deep_expert
 pip3 install -U .[recommended]
 ```
+
+
 
 ### To contribute
 ```bash
@@ -108,6 +118,12 @@ pip3 install -e .[recommended]
 ├── setup.py
 
 
+## How to use
+A set of jupyter notebooks are provided to ease the use of the package for the users. Here is the list of notebooks:
+1. [01_deep_q_expert.ipynb](getting_started/01_deep_q_expert.ipynb) : It shows how to use the extended DeepQ agent  
+2. [02_expert_agent_heuistics.ipynb](getting_started/02_expert_agent_heuristic.ipynb) : It shows how to use the heuristic agent using the expert knowledge 
+3. [03_expert_agent_RL.ipynb](getting_started/03_expert_agent_RL.ipynb) : It show how to use the RL based agent harnessing expert knowledge to reduce the action space.
+
 ## Reproducibility
 ### 1. DeepQExpert Agent
 ----
@@ -131,6 +147,7 @@ python ExpertAgent/DeepQExpert/evaluate.py
 ```
 
 At the end of the evaluation, a graphic representing the performance (reward/alive time) of the agent is visualized to the user.
+
 ![image](docs/imgs/DeepQExpert_Evaluation.png)
 
 
@@ -143,9 +160,44 @@ python main_expert_heuristic.py --nb_episode=15 --nb_process=1 --max_step=2016 -
 ```
 
 At the end of the evaluation a graphic representing the performance (reward/alive time) of the agent is visualized to the user.
+
 ![image](docs/imgs/ExpertAgentHeuristic_Evaluation.png)
 
 
 
 ### 3. ExpertAgent RL
 ------------------
+The RL based agent learning the reduced action space obtained using Expert Knowledge should be trained. The training could be launched using the corresponding `main` file provided in the `root` of the repository as:
+```bash
+python main_expert_rl_train.py
+```
+
+An already trained agent is also provided in the `root` of repository which can be loaded easily as (see [notebook](getting_started/03_expert_agent_RL.ipynb) for a full example):
+```python
+from ExpertAgent.utils import get_package_root
+from ExpertAgent.ExpertAgent import ExpertAgentRL
+
+env, env_gym = creat_env(...)
+
+nn_kwargs = {...}
+
+load_path = os.path.join(get_package_root(), "..", name, "model", "PPO_SB3")
+agent = ExpertAgentRL(name="PPO_SB3",
+                      env=env,
+                      action_space=env.action_space,
+                      gymenv=env_gym,
+                      gym_act_space=env_gym.action_space,
+                      gym_obs_space=env_gym.observation_space,
+                      nn_kwargs=nn_kwargs
+                      )
+
+agent.load(load_path)
+``` 
+
+One the agent is trained or loaded, the evaluation could be done using the following command and the main file `main_expert_rl_eval.py`:
+```bash
+python main_expert_rl_eval.py --nb_episode=15 --nb_process=1 --max_step=2016 --verbose=True 
+```
+At the end of the evaluation a graphic representing the performance (reward/alive time) of the agent is visualized to the user.
+
+![image](docs/imgs/ExpertAgentRL_Evaluation.png)

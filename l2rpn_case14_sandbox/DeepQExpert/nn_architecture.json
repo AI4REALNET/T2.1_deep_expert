@@ -1,0 +1,23 @@
+{
+    "action_size": 179,
+    "activs": [
+        "relu",
+        "relu",
+        "relu",
+        "relu",
+        "relu",
+        "relu"
+    ],
+    "list_attr_obs": [
+        "rho"
+    ],
+    "observation_size": 20,
+    "sizes": [
+        800,
+        800,
+        800,
+        494,
+        494,
+        494
+    ]
+}
