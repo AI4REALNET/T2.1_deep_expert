@@ -12,6 +12,7 @@ pkgs = {
         "lightsim2grid",
         "numpy",
         "torch",
+        "tensorflow",
         "stable-baselines3",
         "imageio",
         "numba",
