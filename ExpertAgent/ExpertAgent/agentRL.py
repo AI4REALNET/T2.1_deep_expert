@@ -1,6 +1,7 @@
 import os
 import logging
 from typing import Optional
+import numpy as np
 from grid2op.Agent import BaseAgent
 from grid2op.Action import BaseAction, ActionSpace
 from grid2op.Observation import BaseObservation
@@ -12,6 +13,7 @@ from stable_baselines3 import PPO
 from stable_baselines3.ppo import MlpPolicy
 from stable_baselines3.common.callbacks import CheckpointCallback, EvalCallback 
 from stable_baselines3.common.callbacks import CallbackList
+from stable_baselines3.common.evaluation import evaluate_policy
 
 from ExpertAgent.DeepQExpert.heuristics import RecoPowerlineModule, RecoverInitTopoModule, TopoNNTopKModulePPO
 from LJNAgent.modules.convex_optim import OptimModule
@@ -223,6 +225,58 @@ class ExpertAgentRL(SB3Agent, BaseAgent):
         else:
             logits = None
             return (logits, distribution, logits)
+    
+    @staticmethod
+    def train_static(agent,
+                     env_gym: GymEnv, 
+                     total_timesteps: int=1000,
+                     n_eval_episodes: int=5,
+                     load_path: Optional[str]=None,
+                     save_path: Optional[str]=None,
+                     save_freq: int=2000,
+                     eval_freq: int=1000):
+        
+        if load_path is not None:
+            agent.nn_model = PPO.load(path=load_path,
+                                     custom_objects={"observation_space" : env_gym.observation_space,
+                                                     "action_space": env_gym.action_space})
+            agent.nn_model.set_env(env_gym)
+        
+        if save_path is None:
+            save_path = os.path.join("logs", agent.name)
+        
+        callbacks = []
+        callbacks.append(CheckpointCallback(save_freq=save_freq,
+                                            save_path=save_path,
+                                            name_prefix=agent.name))
+        
+        if env_gym is not None:
+            callbacks.append(EvalCallback(eval_env=env_gym,
+                                          best_model_save_path=save_path,
+                                          log_path=save_path,
+                                          eval_freq=eval_freq,
+                                          deterministic=True,
+                                          render=False,
+                                          verbose=True,
+                                          n_eval_episodes=n_eval_episodes,
+                                         ))
+            
+        # Train the model
+        agent.nn_model.learn(total_timesteps=total_timesteps,
+                            progress_bar=True,
+                            callback=CallbackList(callbacks))
+        
+        # save the model
+        agent.nn_model.save(os.path.join(save_path, agent.name))
+        agent._init_topoNNModule(top_k=agent.top_k)
+        agent._trained = True    
+        
+    @staticmethod
+    def evaluate(agent, env_gym, **kwargs):
+        mean_reward, std_reward = evaluate_policy(agent.nn_model, 
+                                                  env_gym, 
+                                                  **kwargs)
+        return np.mean(mean_reward), np.mean(std_reward)
         
 if __name__ == "__main__":
     from ExpertAgent.utils.helper_functions import create_env
@@ -252,7 +306,7 @@ if __name__ == "__main__":
             "policy": MlpPolicy,
             "env": env_gym,
             "verbose": True,
-            "learning_rate": 3e-4,
+            "learning_rate": 1e-3,
             "tensorboard_log": model_path,
             "policy_kwargs": policy_kwargs,
             "device": "auto"
