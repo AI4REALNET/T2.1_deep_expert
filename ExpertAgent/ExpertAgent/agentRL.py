@@ -229,14 +229,17 @@ class ExpertAgentRL(SB3Agent, BaseAgent):
     @staticmethod
     def train_static(agent,
                      env_gym: GymEnv, 
-                     total_timesteps: int=1000,
+                     train_steps: int=1000,
                      n_eval_episodes: int=5,
                      load_path: Optional[str]=None,
+                     load_path_fine_tune: Optional[str]=None,
                      save_path: Optional[str]=None,
                      save_freq: int=2000,
                      eval_freq: int=1000):
         
         if load_path is not None:
+            if agent._trained:
+                load_path = load_path_fine_tune
             agent.nn_model = PPO.load(path=load_path,
                                      custom_objects={"observation_space" : env_gym.observation_space,
                                                      "action_space": env_gym.action_space})
@@ -262,14 +265,16 @@ class ExpertAgentRL(SB3Agent, BaseAgent):
                                          ))
             
         # Train the model
-        agent.nn_model.learn(total_timesteps=total_timesteps,
+        agent.nn_model.learn(total_timesteps=train_steps,
                             progress_bar=True,
                             callback=CallbackList(callbacks))
         
         # save the model
         agent.nn_model.save(os.path.join(save_path, agent.name))
         agent._init_topoNNModule(top_k=agent.top_k)
-        agent._trained = True    
+        agent._trained = True
+        
+        return agent
         
     @staticmethod
     def evaluate(agent, env_gym, **kwargs):
