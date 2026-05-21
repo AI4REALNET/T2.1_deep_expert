@@ -277,7 +277,7 @@ class ExpertAgentRL(SB3Agent, BaseAgent):
         return agent
         
     @staticmethod
-    def evaluate(agent, env_gym, **kwargs):
+    def evaluate(agent, env_gym, type, **kwargs):
         mean_reward, std_reward = evaluate_policy(agent.nn_model, 
                                                   env_gym, 
                                                   **kwargs)
